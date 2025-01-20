@@ -218,7 +218,7 @@ import {
   getTurbopackJsConfig,
   isPersistentCachingEnabled,
   isRelevantWarning,
-  type EntryIssuesMap,
+  processIssuesForProd,
 } from '../shared/lib/turbopack/utils'
 
 type Fallback = null | boolean | string
@@ -1437,8 +1437,7 @@ export default async function build(
           )
         )
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const entrypointsSubscription = project.entrypointsSubscribe()
+        const entrypoints = await project.writeAllEntrypointsToDisk(appDirOnly)
         const currentEntrypoints: Entrypoints = {
           global: {
             app: undefined,
@@ -1453,21 +1452,11 @@ export default async function build(
           page: new Map(),
         }
 
-        const currentEntryIssues: EntryIssuesMap = new Map()
-
         const manifestLoader = new TurbopackManifestLoader({
           buildId,
           distDir,
           encryptionKey,
         })
-
-        const entrypointsResult = await entrypointsSubscription.next()
-        if (entrypointsResult.done) {
-          throw new Error('Turbopack did not return any entrypoints')
-        }
-        entrypointsSubscription.return?.().catch(() => {})
-
-        const entrypoints = entrypointsResult.value
 
         const topLevelErrors: {
           message: string
@@ -1486,14 +1475,15 @@ export default async function build(
           )
         }
 
-        await handleEntrypoints({
+        const currentEntryIssues = new Map()
+
+        processIssuesForProd(entrypoints, true, false)
+
+        await handleEntrypoints(
           entrypoints,
-          currentEntrypoints,
-          currentEntryIssues,
           manifestLoader,
-          productionRewrites: customRoutes.rewrites,
-          logErrors: false,
-        })
+          customRoutes.rewrites
+        )
 
         const progress = createProgress(
           currentEntrypoints.page.size + currentEntrypoints.app.size + 1,
@@ -1533,11 +1523,7 @@ export default async function build(
               handleRouteType({
                 page,
                 route,
-                currentEntryIssues,
-                entrypoints: currentEntrypoints,
                 manifestLoader,
-                productionRewrites: customRoutes.rewrites,
-                logErrors: false,
               })
             )
           }
@@ -1548,22 +1534,16 @@ export default async function build(
             handleRouteType({
               page,
               route,
-              currentEntryIssues,
-              entrypoints: currentEntrypoints,
               manifestLoader,
-              productionRewrites: customRoutes.rewrites,
-              logErrors: false,
             })
           )
         }
 
         enqueue(() =>
           handlePagesErrorRoute({
-            currentEntryIssues,
             entrypoints: currentEntrypoints,
             manifestLoader,
             productionRewrites: customRoutes.rewrites,
-            logErrors: false,
           })
         )
         await Promise.all(promises)

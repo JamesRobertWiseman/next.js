@@ -32,6 +32,7 @@ import type {
   HmrIdentifiers,
   Project,
   ProjectOptions,
+  RawEntrypoints,
   Route,
   TurboEngineOptions,
   TurbopackResult,
@@ -586,6 +587,18 @@ function bindingToApi(
       )
     }
 
+    async writeAllEntrypointsToDisk(
+      appDirOnly: boolean
+    ): Promise<TurbopackResult<RawEntrypoints>> {
+      return await withErrorCause(
+        () =>
+          binding.projectWriteAllEntrypointsToDisk(
+            this._nativeProject,
+            appDirOnly
+          ) as Promise<TurbopackResult<RawEntrypoints>>
+      )
+    }
+
     entrypointsSubscribe() {
       type NapiEndpoint = { __napiType: 'Endpoint' }
 
@@ -798,6 +811,15 @@ function bindingToApi(
         () =>
           binding.endpointWriteToDisk(this._nativeEndpoint) as Promise<
             TurbopackResult<WrittenEndpoint>
+          >
+      )
+    }
+
+    async runtime(): Promise<'nodejs' | 'edge'> {
+      return await withErrorCause(
+        () =>
+          binding.endpointRuntime(this._nativeEndpoint) as Promise<
+            TurbopackResult<'nodejs' | 'edge'>
           >
       )
     }

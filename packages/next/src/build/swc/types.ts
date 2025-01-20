@@ -192,6 +192,10 @@ export interface UpdateInfo {
 export interface Project {
   update(options: Partial<ProjectOptions>): Promise<void>
 
+  writeAllEntrypointsToDisk(
+    appDirOnly: boolean
+  ): Promise<TurbopackResult<RawEntrypoints>>
+
   entrypointsSubscribe(): AsyncIterableIterator<TurbopackResult<RawEntrypoints>>
 
   hmrEvents(identifier: string): AsyncIterableIterator<TurbopackResult<Update>>
@@ -247,6 +251,8 @@ export type Route =
     }
 
 export interface Endpoint {
+  runtime(): Promise<'nodejs' | 'edge'>
+
   /** Write files for the endpoint to disk. */
   writeToDisk(): Promise<TurbopackResult<WrittenEndpoint>>
 

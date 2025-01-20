@@ -175,7 +175,14 @@ where
     }
 }
 
-impl<T> TaskInput for OperationVc<T> where T: ?Sized + Send + Sync {}
+impl<T> TaskInput for OperationVc<T>
+where
+    T: ?Sized + Send + Sync,
+{
+    fn is_transient(&self) -> bool {
+        self.node.node.is_transient()
+    }
+}
 
 impl<T> From<RawVc> for OperationVc<T>
 where
