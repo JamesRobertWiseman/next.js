@@ -393,7 +393,6 @@ export type RoutesManifest = {
   staticRoutes: Array<ManifestRoute>
   dynamicRoutes: Array<ManifestRoute>
   dataRoutes: Array<ManifestDataRoute>
-  prefetchSegmentDataRoutes: Array<PrefetchSegmentDataRoute>
   i18n?: {
     domains?: ReadonlyArray<{
       http?: true
@@ -1268,7 +1267,6 @@ export default async function build(
             dynamicRoutes,
             staticRoutes,
             dataRoutes: [],
-            prefetchSegmentDataRoutes: [],
             i18n: config.i18n || undefined,
             rsc: {
               header: RSC_HEADER,
