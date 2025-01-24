@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, pin::Pin};
+use std::{env::args, fmt::Debug, hash::Hash, pin::Pin};
 
 use anyhow::{Context, Result};
 use futures::Future;
@@ -23,15 +23,28 @@ type ResolveFunctor =
 
 type IsResolvedFunctor = fn(&dyn MagicAny) -> bool;
 
+type FilterArgsFunctor = for<'a> fn(Box<dyn MagicAny>) -> Box<dyn MagicAny>;
+
 pub struct ArgMeta {
     serializer: MagicAnySerializeSeed,
     deserializer: MagicAnyDeserializeSeed,
     is_resolved: IsResolvedFunctor,
     resolve: ResolveFunctor,
+    filter_trait_call_args: FilterArgsFunctor,
 }
 
 impl ArgMeta {
     pub fn new<T>() -> Self
+    where
+        T: TaskInput + Serialize + for<'de> Deserialize<'de> + 'static,
+    {
+        fn noop_filter_args(args: Box<dyn MagicAny>) -> Box<dyn MagicAny> {
+            args
+        }
+        Self::with_filter_trait_call_args::<T>(noop_filter_args)
+    }
+
+    pub fn with_filter_trait_call_args<T>(filter_trait_call_args: FilterArgsFunctor) -> Self
     where
         T: TaskInput + Serialize + for<'de> Deserialize<'de> + 'static,
     {
@@ -64,6 +77,7 @@ impl ArgMeta {
                     Ok(Box::new(resolved) as Box<dyn MagicAny>)
                 })
             },
+            filter_trait_call_args,
         }
     }
 
@@ -144,6 +158,7 @@ impl NativeFunction {
     pub fn new_method<Mode, This, Inputs, I>(
         name: String,
         function_meta: FunctionMeta,
+        arg_meta: ArgMeta,
         implementation: I,
     ) -> Self
     where

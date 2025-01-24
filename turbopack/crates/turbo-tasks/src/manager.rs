@@ -37,6 +37,7 @@ use crate::{
     },
     id_factory::{IdFactory, IdFactoryWithReuse},
     magic_any::MagicAny,
+    native_function::FunctionMeta,
     raw_vc::{CellId, RawVc},
     registry::{self, get_function},
     serialization_invalidation::SerializationInvalidator,
@@ -48,8 +49,8 @@ use crate::{
     trait_helpers::get_trait_method,
     util::StaticOrArc,
     vc::ReadVcFuture,
-    Completion, FunctionMeta, InvalidationReason, InvalidationReasonSet, ResolvedVc,
-    SharedReference, TaskId, TaskIdSet, ValueTypeId, Vc, VcRead, VcValueTrait, VcValueType,
+    Completion, InvalidationReason, InvalidationReasonSet, ResolvedVc, SharedReference, TaskId,
+    TaskIdSet, ValueTypeId, Vc, VcRead, VcValueTrait, VcValueType,
 };
 
 pub trait TurboTasksCallApi: Sync + Send {

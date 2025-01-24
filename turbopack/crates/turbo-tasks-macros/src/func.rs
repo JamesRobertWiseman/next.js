@@ -1051,13 +1051,14 @@ pub struct NativeFn {
     pub function_path_string: String,
     pub function_path: ExprPath,
     pub is_method: bool,
+    pub filter_trait_call_args: Option<TokenStream>,
     pub local: bool,
     pub local_cells: bool,
 }
 
 impl NativeFn {
     pub fn ty(&self) -> Type {
-        parse_quote! { turbo_tasks::NativeFunction }
+        parse_quote! { turbo_tasks::macro_helpers::NativeFunction }
     }
 
     pub fn definition(&self) -> TokenStream {
@@ -1070,24 +1071,40 @@ impl NativeFn {
         } = self;
 
         let constructor = if *is_method {
-            quote! { new_method }
-        } else {
-            quote! { new_function }
-        };
-
-        quote! {
-            {
-                #[allow(deprecated)]
-                turbo_tasks::NativeFunction::#constructor(
-                    #function_path_string.to_owned(),
-                    turbo_tasks::FunctionMeta {
-                        local: #local,
-                        local_cells: #local_cells,
-                    },
-                    #function_path,
-                )
+            let arg_meta = if let Some(filter) = self.filter_trait_call_args {
+                quote! { turbo_tasks::macro_helpers::ArgMeta::with_filter_trait_call_args(#filter) }
+            } else {
+                quote! { turbo_tasks::macro_helpers::ArgMeta::new() }
+            };
+            quote! {
+                {
+                    #[allow(deprecated)]
+                    turbo_tasks::macro_helpers::NativeFunction::new_method(
+                        #function_path_string.to_owned(),
+                        turbo_tasks::macro_helpers::FunctionMeta {
+                            local: #local,
+                            local_cells: #local_cells,
+                        },
+                        turbo_tasks::macro_helpers::ArgMeta::new(),
+                        #function_path,
+                    )
+                }
             }
-        }
+        } else {
+            quote! {
+                {
+                    #[allow(deprecated)]
+                    turbo_tasks::macro_helpers::NativeFunction::new_function(
+                        #function_path_string.to_owned(),
+                        turbo_tasks::macro_helpers::FunctionMeta {
+                            local: #local,
+                            local_cells: #local_cells,
+                        },
+                        #function_path,
+                    )
+                }
+            }
+        };
     }
 
     pub fn id_ty(&self) -> Type {
