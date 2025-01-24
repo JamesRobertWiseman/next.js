@@ -153,7 +153,7 @@ impl SourceMapGenConfig for InlineSourcesContentConfig {
     }
 }
 
-#[turbo_tasks::function]
+#[turbo_tasks::function(local)]
 pub async fn parse(
     source: ResolvedVc<Box<dyn Source>>,
     ty: Value<EcmascriptModuleAssetType>,

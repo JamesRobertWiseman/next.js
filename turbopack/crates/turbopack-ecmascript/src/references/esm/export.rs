@@ -493,7 +493,7 @@ impl EsmExports {
 
 #[turbo_tasks::value_impl]
 impl CodeGenerateable for EsmExports {
-    #[turbo_tasks::function]
+    #[turbo_tasks::function(local)]
     async fn code_generation(
         self: Vc<Self>,
         _module_graph: Vc<ModuleGraph>,
